@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Boba Bliss | Dynamic Drift Carousel - Left/Right Sliding Scale</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background-color: #FEFAF5; scroll-behavior: smooth; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        
+        /* SPIKE SHAPE PROMO BADGE */
+        .promo-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 75px;
+            height: 75px;
+            background: linear-gradient(135deg, #FFD966 0%, #E67E22 100%);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #2D1B0A;
+            text-align: center;
+            padding: 0 6px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+            z-index: 10;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.2px;
+            transform: rotate(5deg);
+            transition: transform 0.2s ease;
+        }
+        .promo-badge span { display: block; line-height: 1.2; font-size: 0.7rem; font-weight: 800; }
+        .promo-badge.vegan { background: linear-gradient(135deg, #A7E0A0, #2E7D32); color: white; }
+        .promo-badge.signature { background: linear-gradient(135deg, #E6B8A2, #B85C1A); color: #2c1a0a; }
+        .promo-badge.bundle-badge { background: linear-gradient(135deg, #F7C873, #C95A1E); width: 70px; height: 70px; }
+        .group:hover .promo-badge { transform: rotate(0deg) scale(1.05); }
+
+        /* DYNAMIC DRIFT CAROUSEL - items physically move further left/right based on index */
+        .carousel-track {
+            display: flex;
+            align-items: center;
+            gap: -6px;
+            padding: 50px 0;
+            position: relative;
+            width: 100%;
+            overflow: visible;
+            flex-wrap: nowrap;
+            transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+            will-change: transform;
+        }
+        
+        .carousel-item {
+            flex-shrink: 0;
+            width: 260px;
+            min-width: 260px;
+            max-width: 260px;
+            background: white;
+            border-radius: 2rem;
+            overflow: hidden;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.25);
+            transition: transform 0.35s cubic-bezier(0.22, 0.97, 0.36, 1.05), opacity 0.35s ease;
+            cursor: pointer;
+            will-change: transform, opacity;
+        }
+        .carousel-center {
+            transform: scale(1.2);
+            z-index: 30;
+            opacity: 1;
+        }
+        .carousel-side {
+            transform: scale(1);
+            opacity: 0.95;
+        }
+        .carousel-far {
+
+            transform: scale(0.8);
+            opacity: 0.6;
+            filter: brightness(0.92);
+        }
+        .carousel-hidden {
+            transform: scale(0.72);
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+        
+        /* POSITION-BASED SIZING + DRIFTING (leftmost items go far left, rightmost far right) */
+        /* Center item: biggest, centered */
+        .carousel-center {
+            transform: scale(1.2) translateY(-6px);
+            z-index: 30;
+            box-shadow: 0 30px 45px 0px rgba(0,0,0,0.4);
+            border: 2px solid #f3bc6c;
+            margin: 0 4px;
+        }
+        
+        /* Position 1 (second from left): slight offset for carousel flow */
+        .carousel-pos1 {
+            transform: translateY(-3px);
+            z-index: 20;
+            opacity: 0.98;
+        }
+        
+        /* Position 3 (second from right): slight offset for carousel flow */
+        .carousel-pos3 {
+            transform: translateY(-3px);
+            z-index: 20;
+            opacity: 0.98;
+        }
+        
+        /* Position 0 (far left edge): subtle fade to maintain focus */
+        .carousel-pos0 {
+            transform: translateY(0px);
+            z-index: 10;
+            opacity: 0.75;
+            filter: brightness(0.95);
+        }
+        
+        /* Position 4 (far right edge): subtle fade to maintain focus */
+        .carousel-pos4 {
+            transform: translateY(0px);
+            z-index: 10;
+            opacity: 0.75;
+            filter: brightness(0.95);
+        }
+        
+        /* Responsive: on smaller screens reduce drift amount */
+        @media (max-width: 1100px) {
+            .carousel-item { width: 250px; min-width: 250px; max-width: 250px; }
+            .carousel-pos1 { transform: translateY(-3px); }
+            .carousel-pos3 { transform: translateY(-3px); }
+            .carousel-pos0 { transform: translateY(0px); display: flex; }
+            .carousel-pos4 { transform: translateY(0px); display: flex; }
+            .carousel-center { transform: scale(1.05) translateY(-4px); }
+        }
+        
+        @media (max-width: 900px) {
+            .carousel-pos0, .carousel-pos4 { display: none; }
+            .carousel-pos1 { transform: scale(0.88) translateX(-15px); }
+            .carousel-pos3 { transform: scale(0.88) translateX(15px); }
+            .carousel-center { width: 270px; }
+        }
+        
+        .carousel-item img { width: 100%; height: auto; object-fit: cover; aspect-ratio: 1 / 1; }
+        
+        /* Navigation buttons */
+        .nav-btn {
+            background: #d9b48b;
+            border-radius: 60px;
+            width: 54px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            cursor: pointer;
+            color: #3b2a1f;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+            z-index: 45;
+        }
+        .nav-btn:hover { background: #c28547; transform: scale(1.08); color: white; }
+        
+        /* Animation pill selector */
+        .info-pill {
+            background: #f7e5d3;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #5a3e1f;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .cart-drawer { transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1); will-change: transform; }
+        .cart-pop { animation: gentlePop 0.25s ease-in-out; }
+        @keyframes gentlePop { 0% { transform: scale(1); } 50% { transform: scale(1.2); background-color: #10b981; } 100% { transform: scale(1); } }
+        .cart-scroll { scrollbar-width: thin; scrollbar-color: #d97706 #fef3c7; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white/85 backdrop-blur-xl border-b border-amber-100/70 shadow-sm">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2"><i class="fas fa-mug-hot text-2xl text-amber-700"></i><h1 class="text-2xl md:text-3xl font-serif font-extrabold text-amber-950">Boba Bliss</h1></div>
+            <div class="hidden md:flex space-x-8 font-medium text-slate-700"><a href="#" class="hover:text-amber-700 transition">Menu</a><a href="#" class="hover:text-amber-700 transition">Bundles</a><a href="#" class="hover:text-amber-700 transition">Locations</a><a href="#" class="hover:text-amber-700 transition">Rewards</a></div>
+            <button onclick="toggleCart()" class="relative p-2.5 bg-amber-100 rounded-full hover:bg-amber-200 transition shadow-sm"><i class="fas fa-shopping-bag text-amber-800 text-lg"></i><span id="cart-count" class="absolute -top-1.5 -right-1.5 bg-amber-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold">0</span></button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-16 px-6 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+            <div class="space-y-6"><div class="inline-flex gap-2 bg-amber-100/80 px-4 py-2 rounded-full"><i class="fas fa-leaf text-amber-700"></i><span class="text-amber-800 text-sm font-semibold">Freshly Brewed Daily</span></div>
+            <h2 class="text-5xl md:text-7xl font-serif leading-tight text-amber-950">Happiness in <br><span class="text-amber-600 italic">Every Sip.</span></h2><p class="text-lg text-slate-600">Artisanal tea, creamy milk, handcrafted pearls & dynamic drifting bundle carousel.</p>
+            <div class="flex gap-4"><button class="bg-amber-800 text-white px-8 py-4 rounded-2xl font-bold shadow-lg flex gap-2"><span>Order Online</span><i class="fas fa-arrow-right"></i></button><button class="border-2 border-amber-700 text-amber-800 px-8 py-4 rounded-2xl font-bold">View Menu</button></div></div>
+            <div class="relative flex justify-center"><div class="absolute w-72 h-72 bg-amber-200 rounded-full blur-3xl opacity-40 animate-pulse"></div><div class="rounded-3xl shadow-2xl overflow-hidden transform rotate-2"><img src="https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&q=80&w=800" alt="Boba Tea" class="w-full object-cover"></div></div>
+        </div>
+    </section>
+
+    <!-- Signature Sips Light Brown -->
+    <section class="py-20" style="background-color: #F4E4CD;">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12"><h3 class="text-3xl font-serif font-bold text-amber-950">✨ Signature Sips ✨</h3><p class="text-amber-800/80">Spiked badges & classic blends</p></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="group bg-white rounded-[2.5rem] p-5 hover:shadow-2xl transition relative"><div class="relative overflow-hidden rounded-2xl mb-4"><img src="https://images.unsplash.com/photo-1544411047-c491574abb22?auto=format&fit=crop&q=80&w=600" class="w-full h-64 object-cover group-hover:scale-105 transition"><div class="promo-badge"><span>BEST<br>SELLER</span></div></div><div class="flex justify-between"><div><h4 class="text-xl font-bold">Classic Pearl Milk Tea</h4><p class="text-sm text-slate-500">Black tea, fresh milk, brown sugar pearls</p></div><span class="text-xl font-bold text-amber-800">$5.50</span></div><button onclick="addToCart('Classic Pearl Milk Tea', 5.50)" class="w-full mt-4 bg-amber-50 text-amber-900 py-3 rounded-xl font-bold border border-amber-200 hover:bg-amber-800 hover:text-white transition">Add to Order</button></div>
+                <div class="group bg-white rounded-[2.5rem] p-5 hover:shadow-2xl transition relative"><div class="relative overflow-hidden rounded-2xl mb-4"><img src="milktea1.jpg" class="w-full h-64 object-cover group-hover:scale-105 transition"><div class="promo-badge vegan"><span>VEGAN<br>FRIENDLY</span></div></div><div class="flex justify-between"><div><h4 class="text-xl font-bold">Matcha Latte</h4><p class="text-sm text-slate-500">Premium Uji matcha with oat milk</p></div><span class="text-xl font-bold text-amber-800">$6.25</span></div><button onclick="addToCart('Matcha Latte', 6.25)" class="w-full mt-4 bg-amber-50 text-amber-900 py-3 rounded-xl font-bold border border-amber-200 hover:bg-amber-800 transition">Add to Order</button></div>
+                <div class="group bg-white rounded-[2.5rem] p-5 hover:shadow-2xl transition relative"><div class="relative overflow-hidden rounded-2xl mb-4"><img src="https://images.unsplash.com/photo-1626808642820-b21390d63503?auto=format&fit=crop&q=80&w=600" class="w-full h-64 object-cover group-hover:scale-105 transition"><div class="promo-badge signature"><span>SIGNATURE</span></div></div><div class="flex justify-between"><div><h4 class="text-xl font-bold">Brown Sugar Deerioca</h4><p class="text-sm text-slate-500">Hand-crafted brown sugar syrup</p></div><span class="text-xl font-bold text-amber-800">$5.95</span></div><button onclick="addToCart('Brown Sugar Deerioca', 5.95)" class="w-full mt-4 bg-amber-50 text-amber-900 py-3 rounded-xl font-bold border border-amber-200 hover:bg-amber-800 transition">Add to Order</button></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BUNDLE SECTION: Very Brown with DRIFT ANIMATION (left items go further left on press) -->
+    <section class="py-20" style="background-color: #3A2610; background-image: radial-gradient(circle at 10% 30%, rgba(210, 150, 75, 0.12) 2%, transparent 2.5%); background-size: 28px 28px;">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-6">
+                <i class="fas fa-gift text-amber-300 text-4xl mb-2 inline-block"></i>
+                <h3 class="text-4xl font-serif font-bold text-amber-100 drop-shadow-md">🌀 Drift & Scale Carousel 🌀</h3>
+                <div class="flex justify-center mt-3">
+                    <div class="info-pill"><i class="fas fa-arrow-left"></i> Press left → left items drift further left <i class="fas fa-arrow-right ml-2"></i></div>
+                </div>
+                <p class="text-amber-200/80 max-w-xl mx-auto mt-3">The leftmost box slides even farther left when you click LEFT — ultra smooth motion + scaling</p>
+            </div>
+            
+            <div class="relative flex items-center justify-center">
+                <button id="prevBundle" class="nav-btn absolute left-0 md:-left-6 z-40 shadow-2xl"><i class="fas fa-chevron-left text-xl"></i><span class="sr-only">Previous</span></button>
+                <div id="bundleCarouselWrapper" class="w-full overflow-hidden">
+                    <div id="bundleCarousel" class="carousel-track">
+                        <!-- dynamic items -->
+                    </div>
+                </div>
+                <button id="nextBundle" class="nav-btn absolute right-0 md:-right-6 z-40 shadow-2xl"><i class="fas fa-chevron-right text-xl"></i><span class="sr-only">Next</span></button>
+            </div>
+            <p class="text-center text-amber-300/80 text-sm mt-8"><i class="fas fa-hand-pointer"></i> Click any bundle to see details — observe how items physically translate left/right based on position</p>
+        </div>
+    </section>
+
+    <!-- Cart Drawer -->
+    <div id="cart-drawer" class="cart-drawer fixed top-0 right-0 h-full w-full sm:w-[450px] bg-white shadow-2xl z-[60] transform translate-x-full flex flex-col">
+        <div class="p-6 flex flex-col h-full"><div class="flex justify-between border-b border-amber-100 pb-4"><div class="flex gap-2"><i class="fas fa-shopping-cart text-amber-700"></i><h3 class="text-2xl font-serif font-bold">Your Bliss Cart</h3></div><button onclick="toggleCart()"><i class="fas fa-times text-xl text-slate-400"></i></button></div>
+        <div id="cart-items" class="flex-grow overflow-y-auto cart-scroll space-y-3 mt-4 pr-1"><div class="flex flex-col items-center h-40 justify-center text-slate-400"><i class="fas fa-mug-empty text-5xl"></i><p class="italic">Cart is empty</p></div></div>
+        <div class="border-t pt-5"><div class="flex justify-between text-xl font-bold"><span>Total</span><span id="cart-total">$0.00</span></div><button id="checkout-btn" class="w-full bg-amber-800 text-white py-4 rounded-2xl font-bold mt-4">Checkout</button><button onclick="toggleCart()" class="w-full border mt-3 py-3 rounded-xl text-amber-700">Continue Shopping</button></div></div>
+    </div>
+
+    <script>
+        // BUNDLE DATA - original array (7 items)
+        const originalBundles = [
+            { id: "b1", name: "Duo Milk Tea Set", description: "2 Classic Pearls", price: 10.50, image: "https://images.unsplash.com/photo-1551103782-3ab3b0a7d6f2?auto=format&fit=crop&q=80&w=400", items: ["Classic Pearl Milk Tea","Classic Pearl Milk Tea"] },
+            { id: "b2", name: "Matcha & Mango Duo", description: "Matcha + Mango Fruit Tea", price: 12.25, image: "https://images.unsplash.com/photo-1593179357195-ee5fcb6d54a5?auto=format&fit=crop&q=80&w=400", items: ["Matcha Latte","Mango Passion Fruit Tea"] },
+            { id: "b3", name: "Brown Sugar Trio", description: "3 Brown Sugar + 1 Taro", price: 18.75, image: "https://images.unsplash.com/photo-1619072514417-4135b8f8e34a?auto=format&fit=crop&q=80&w=400", items: ["Brown Sugar Deerioca","Brown Sugar Deerioca","Taro Milk Tea"] },
+            { id: "b4", name: "Fiesta Fruit Pack", description: "Lychee, Mango, Coconut", price: 17.90, image: "https://images.unsplash.com/photo-1571763195252-0f200d1afcb7?auto=format&fit=crop&q=80&w=400", items: ["Lychee Bloom","Mango Passion Fruit Tea","Coconut Cloud"] },
+            { id: "b5", name: "Vegan Delight Box", description: "Matcha + Coconut + Oat", price: 16.50, image: "https://images.unsplash.com/photo-1621263764928-df9b3f120355?auto=format&fit=crop&q=80&w=400", items: ["Matcha Latte","Coconut Cloud"] },
+            { id: "b6", name: "Premium Sampler", description: "5 bestsellers bundle", price: 26.99, image: "https://images.unsplash.com/photo-1571213272365-70523f69588c?auto=format&fit=crop&q=80&w=400", items: ["Classic Pearl Milk Tea","Matcha Latte","Brown Sugar Deerioca","Taro Milk Tea","Lychee Bloom"] },
+            { id: "b7", name: "Honey & Spice", description: "Jasmine + Brown Sugar", price: 11.75, image: "https://images.unsplash.com/photo-1558857568-6c99464224f1?auto=format&fit=crop&q=80&w=400", items: ["Honey Jasmine Tea","Brown Sugar Deerioca"] }
+        ];
+        
+        // Create a LOOPED array by repeating the original bundles enough times for seamless infinite scrolling
+        // This ensures there are always items on left and right sides, including far sides
+        const LOOP_COUNT = 15;
+        let bundles = [];
+        for (let i = 0; i < LOOP_COUNT; i++) {
+            bundles.push(...originalBundles);
+        }
+        
+        let cart = [];
+        // Start at the middle of the looped array to have items on both sides
+        let currentIndex = Math.floor(bundles.length / 2);
+        const itemFullWidth = 260; // item width + gap for track translation
+        
+        function updateCartUI() {
+            const container = document.getElementById('cart-items');
+            const totalSpan = document.getElementById('cart-total');
+            const countSpan = document.getElementById('cart-count');
+            if (!container) return;
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="flex flex-col items-center h-40 justify-center text-slate-400"><i class="fas fa-mug-empty text-5xl"></i><p class="italic">Cart is empty</p></div>`;
+            } else {
+                container.innerHTML = cart.map((item, idx) => `
+                    <div class="flex justify-between items-center bg-amber-50 p-4 rounded-2xl">
+                        <div><p class="font-bold text-amber-950">${escapeHtml(item.name)}</p><p class="text-sm text-amber-700">$${item.price.toFixed(2)}</p></div>
+                        <button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                `).join('');
+            }
+            const total = cart.reduce((s, i) => s + i.price, 0);
+            totalSpan.innerText = `$${total.toFixed(2)}`;
+            countSpan.innerText = cart.length;
+            const cartBtn = document.querySelector('button[onclick="toggleCart()"]');
+            if(cartBtn) cartBtn.classList.add('cart-pop');
+            setTimeout(() => cartBtn?.classList.remove('cart-pop'), 200);
+        }
+        
+        function addToCart(name, price) {
+            cart.push({ name, price, id: Date.now() });
+            updateCartUI();
+            const cartIcon = document.querySelector('button[onclick="toggleCart()"]');
+            if(cartIcon) cartIcon.classList.add('cart-pop');
+            setTimeout(() => cartIcon?.classList.remove('cart-pop'), 250);
+        }
+        
+        window.addToCart = addToCart;
+        window.removeFromCart = function(idx) { cart.splice(idx,1); updateCartUI(); };
+        window.toggleCart = function() { document.getElementById('cart-drawer').classList.toggle('translate-x-full'); };
+        
+        function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+        
+        function renderCarousel() {
+            const carouselDiv = document.getElementById('bundleCarousel');
+            if (!carouselDiv) return;
+            
+            // Render all items in the looped array
+            carouselDiv.innerHTML = bundles.map((bundle, idx) => {
+                // Get the original index for display purposes (for the alert)
+                const originalIndex = idx % originalBundles.length;
+                return `
+                    <div class="carousel-item bg-white rounded-3xl shadow-2xl overflow-hidden cursor-pointer hover:shadow-3xl" data-index="${idx}" data-original-index="${originalIndex}">
+                        <div class="relative">
+                            <img src="${bundle.image}" alt="${escapeHtml(bundle.name)}" class="w-full h-auto object-cover" style="aspect-ratio:1/1;">
+                            <div class="promo-badge bundle-badge" style="background: linear-gradient(135deg, #F7C873, #C95A1E); clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"><span>BUNDLE<br>🎁</span></div>
+                        </div>
+                        <div class="p-5 text-center">
+                            <h4 class="font-bold text-xl text-amber-900">${escapeHtml(bundle.name)}</h4>
+                            <p class="text-sm text-slate-500">${escapeHtml(bundle.description)}</p>
+                            <div class="flex justify-between items-center mt-4 px-3">
+                                <span class="font-black text-amber-800 text-xl">$${bundle.price.toFixed(2)}</span>
+                                <button onclick="event.stopPropagation(); addToCart('Bundle: ${escapeHtml(bundle.name)}', ${bundle.price})" class="bg-amber-100 px-5 py-2 rounded-full text-sm font-bold hover:bg-amber-700 hover:text-white transition shadow"><i class="fas fa-cart-plus mr-1"></i> Add</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.querySelectorAll('.carousel-item').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    if(e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                    const originalIdxAttr = el.getAttribute('data-original-index');
+                    if(originalIdxAttr !== null) {
+                        const bundleItem = originalBundles[Number(originalIdxAttr)];
+                        alert(`${bundleItem.name} - $${bundleItem.price}\n✨ Includes: ${bundleItem.items.join(', ')}`);
+                    }
+                });
+            });
+            updateCarouselDisplay();
+        }
+
+        function updateCarouselDisplay() {
+            const track = document.getElementById('bundleCarousel');
+            const wrapper = document.getElementById('bundleCarouselWrapper');
+            if (!track || !wrapper) return;
+
+            const total = bundles.length;
+            
+            // Update classes for each item based on distance from currentIndex
+            document.querySelectorAll('.carousel-item').forEach((item, idx) => {
+                item.classList.remove('carousel-center', 'carousel-side', 'carousel-far', 'carousel-hidden');
+                let rawDistance = Math.abs(idx - currentIndex);
+                // Handle circular distance since we have a looped array
+                let distance = Math.min(rawDistance, total - rawDistance);
+                if (distance === 0) item.classList.add('carousel-center');
+                else if (distance === 1) item.classList.add('carousel-side');
+                else if (distance === 2) item.classList.add('carousel-far');
+                else item.classList.add('carousel-hidden');
+            });
+
+            // Calculate the center position
+            const visibleCenter = (wrapper.clientWidth - 260) / 2;
+            let translateX = visibleCenter - currentIndex * itemFullWidth;
+            
+            // Seamless infinite loop reset - when near edges, jump to the middle section
+            const edgeThreshold = 3; // Jump when within 3 items of edge
+            if (currentIndex < edgeThreshold) {
+                currentIndex = currentIndex + Math.floor(bundles.length / 2);
+                translateX = visibleCenter - currentIndex * itemFullWidth;
+            } else if (currentIndex > bundles.length - edgeThreshold) {
+                currentIndex = currentIndex - Math.floor(bundles.length / 2);
+                translateX = visibleCenter - currentIndex * itemFullWidth;
+            }
+            
+            track.style.transition = 'transform 0.35s cubic-bezier(0.22, 0.97, 0.36, 1.05)';
+            track.style.transform = `translateX(${translateX}px)`;
+            track.addEventListener('transitionend', () => { isMoving = false; }, { once: true });
+        }
+
+        let isMoving = false;
+
+        function moveLeft() {
+            if (isMoving) return;
+            isMoving = true;
+            currentIndex = currentIndex - 1;
+            updateCarouselDisplay();
+        }
+
+        function moveRight() {
+            if (isMoving) return;
+            isMoving = true;
+            currentIndex = currentIndex + 1;
+            updateCarouselDisplay();
+        }
+        
+        // Event binding
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCarousel();
+            const prevBtn = document.getElementById('prevBundle');
+            const nextBtn = document.getElementById('nextBundle');
+            if(prevBtn) prevBtn.addEventListener('click', moveLeft);
+            if(nextBtn) nextBtn.addEventListener('click', moveRight);
+            window.addEventListener('resize', () => updateCarouselDisplay());
+            updateCartUI();
+        });
+        
+        // Checkout
+        const checkoutBtn = document.getElementById('checkout-btn');
+        if(checkoutBtn) checkoutBtn.addEventListener('click', () => {
+            if(cart.length === 0) alert("Your cart is empty! Add some delicious boba or bundles ✨");
+            else { alert(`Thank you for ordering from Boba Bliss! Total: $${cart.reduce((s,i)=>s+i.price,0).toFixed(2)}. Your bliss is on the way 🧋🎉`); cart = []; updateCartUI(); toggleCart(); }
+        });
+        
+        document.addEventListener('keydown', (e) => { if(e.key === 'Escape') { const drawer = document.getElementById('cart-drawer'); if(drawer && !drawer.classList.contains('translate-x-full')) drawer.classList.add('translate-x-full'); } });
+    </script>
+</body>
+</html>
